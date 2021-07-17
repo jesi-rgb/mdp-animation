@@ -27,7 +27,14 @@ class MMatrix:
 
 class Intro(Scene):
     def construct(self):
-        self.play(FadeIn(Text("Maximum Diversity Problem", font="SF Mono")))
+        title = Text("Maximum Diversity Problem", font="SF Mono")
+        formula = (
+            MathTex(r"MD(x) = \sum^{n-1}_{i=0} \sum^{n}_{j=i+1} D_{ij}x_ix_j")
+            .move_to(2 * DOWN)
+            .scale(0.6)
+        )
+        group = VGroup(*[title, formula]).move_to(ORIGIN)
+        self.play(LaggedStartMap(FadeIn, group))
         self.wait()
 
 
