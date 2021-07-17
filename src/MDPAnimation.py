@@ -6,6 +6,7 @@ np.random.seed(1)
 # Distance Matrix
 n = 5
 D = np.random.randint(100, size=(n, n), dtype=int)
+np.fill_diagonal(D, 0)
 
 
 class MMatrix:
@@ -62,9 +63,63 @@ class MDPAnimation(Scene):
 
         self.play(FadeIn(squares))
 
+        self.wait()
+
+        # DEMONSTRATION OF THE DISTANCE BETWEEN THE SQUARES
+
         surround_sq_1 = SurroundingRectangle(squares[1])
         surround_sq_2 = SurroundingRectangle(squares[3])
         idx = coords_to_index(1, 3, n)
         surround_mx_1 = SurroundingRectangle(distance_matrix[idx])
 
         self.play(Create(surround_sq_1), Create(surround_sq_2), Create(surround_mx_1))
+
+        self.wait()
+
+        surround_sq_3 = SurroundingRectangle(squares[2])
+        surround_sq_4 = SurroundingRectangle(squares[4])
+        idx = coords_to_index(2, 4, n)
+        surround_mx_2 = SurroundingRectangle(distance_matrix[idx])
+
+        self.play(
+            ReplacementTransform(surround_sq_1, surround_sq_3),
+            ReplacementTransform(surround_sq_2, surround_sq_4),
+            ReplacementTransform(surround_mx_1, surround_mx_2),
+        )
+        self.wait()
+
+        surround_sq_5 = SurroundingRectangle(squares[0])
+        surround_sq_6 = SurroundingRectangle(squares[3])
+        idx = coords_to_index(0, 3, n)
+        surround_mx_3 = SurroundingRectangle(distance_matrix[idx])
+
+        self.play(
+            ReplacementTransform(surround_sq_3, surround_sq_5),
+            ReplacementTransform(surround_sq_4, surround_sq_6),
+            ReplacementTransform(surround_mx_2, surround_mx_3),
+        )
+        self.wait()
+
+        surround_sq_7 = SurroundingRectangle(squares[1])
+        surround_sq_8 = SurroundingRectangle(squares[2])
+        idx = coords_to_index(1, 2, n)
+        surround_mx_4 = SurroundingRectangle(distance_matrix[idx])
+
+        self.play(
+            ReplacementTransform(surround_sq_5, surround_sq_7),
+            ReplacementTransform(surround_sq_6, surround_sq_8),
+            ReplacementTransform(surround_mx_3, surround_mx_4),
+        )
+        self.wait()
+
+        surround_sq_9 = SurroundingRectangle(squares[4])
+        surround_sq_10 = SurroundingRectangle(squares[4])
+        idx = coords_to_index(4, 4, n)
+        surround_mx_5 = SurroundingRectangle(distance_matrix[idx])
+
+        self.play(
+            ReplacementTransform(surround_sq_7, surround_sq_9),
+            ReplacementTransform(surround_sq_8, surround_sq_10),
+            ReplacementTransform(surround_mx_4, surround_mx_5),
+        )
+        self.wait()
