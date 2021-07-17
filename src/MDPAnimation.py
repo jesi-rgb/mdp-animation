@@ -1,12 +1,13 @@
 from manim import *
 import numpy as np
-
+import networkx as nx
 
 np.random.seed(1)
 # Distance Matrix
 n = 5
 D = np.random.randint(100, size=(n, n), dtype=int)
 np.fill_diagonal(D, 0)
+D = np.triu(D)
 
 
 class MMatrix:
@@ -59,74 +60,55 @@ class MDPAnimation(Scene):
         )
         self.remove(title_matrix_distance)
 
-        squares = VGroup(
-            *[
-                Square(color=random_bright_color(), fill_opacity=1)
-                .scale(0.5)
-                .move_to((RIGHT + 0.1) * i, coor_mask=[1, 0, 0])
-                for i in range(n)
-            ]
-        ).move_to(ORIGIN)
+        G = nx.complete_graph(n)
 
-        self.play(FadeIn(squares))
+        graph_og = Graph(
+            vertices=list(G.nodes()),
+            edges=list(G.edges()),
+            layout="circular",
+            labels=True,
+        )
+
+        graph = graph_og.copy()
+
+        self.play(Create(graph))
 
         self.wait()
 
-        # DEMONSTRATION OF THE DISTANCE BETWEEN THE SQUARES
+        # DEMONSTRATION OF THE DISTANCE BETWEEN THE DOTS
 
-        surround_sq_1 = SurroundingRectangle(squares[1])
-        surround_sq_2 = SurroundingRectangle(squares[3])
         idx = coords_to_index(1, 3, n)
         surround_mx_1 = SurroundingRectangle(distance_matrix[idx])
 
-        self.play(Create(surround_sq_1), Create(surround_sq_2), Create(surround_mx_1))
+        self.play(
+            graph[1].animate.set_color(YELLOW),
+            graph[3].animate.set_color(YELLOW),
+            graph.edges[(1, 3)].animate.set_color(YELLOW),
+            Create(surround_mx_1),
+        )
 
         self.wait()
 
-        surround_sq_3 = SurroundingRectangle(squares[2])
-        surround_sq_4 = SurroundingRectangle(squares[4])
-        idx = coords_to_index(2, 4, n)
-        surround_mx_2 = SurroundingRectangle(distance_matrix[idx])
+        n_vertex = list(range(n))
+        combs = set(([(i, j) for i in n_vertex for j in n_vertex if i < j]))
 
-        self.play(
-            ReplacementTransform(surround_sq_1, surround_sq_3),
-            ReplacementTransform(surround_sq_2, surround_sq_4),
-            ReplacementTransform(surround_mx_1, surround_mx_2),
-        )
-        self.wait()
+        surr_sq = [surround_mx_1]
 
-        surround_sq_5 = SurroundingRectangle(squares[0])
-        surround_sq_6 = SurroundingRectangle(squares[3])
-        idx = coords_to_index(0, 3, n)
-        surround_mx_3 = SurroundingRectangle(distance_matrix[idx])
+        # TODO: try to speed up the animation of this, to go much faster
+        for i, j in combs:
 
-        self.play(
-            ReplacementTransform(surround_sq_3, surround_sq_5),
-            ReplacementTransform(surround_sq_4, surround_sq_6),
-            ReplacementTransform(surround_mx_2, surround_mx_3),
-        )
-        self.wait()
+            idx = coords_to_index(i, j, n)
+            curr_surr_sq = SurroundingRectangle(distance_matrix[idx])
 
-        surround_sq_7 = SurroundingRectangle(squares[1])
-        surround_sq_8 = SurroundingRectangle(squares[2])
-        idx = coords_to_index(1, 2, n)
-        surround_mx_4 = SurroundingRectangle(distance_matrix[idx])
+            self.play(ReplacementTransform(graph, graph_og))
 
-        self.play(
-            ReplacementTransform(surround_sq_5, surround_sq_7),
-            ReplacementTransform(surround_sq_6, surround_sq_8),
-            ReplacementTransform(surround_mx_3, surround_mx_4),
-        )
-        self.wait()
+            self.play(
+                graph[i].animate.set_color(YELLOW),
+                graph[j].animate.set_color(YELLOW),
+                graph.edges[(i, j)].animate.set_color(YELLOW),
+                ReplacementTransform(surr_sq[-1], curr_surr_sq),
+                run_time=1,
+            )
+            surr_sq.append(curr_surr_sq)
 
-        surround_sq_9 = SurroundingRectangle(squares[4])
-        surround_sq_10 = SurroundingRectangle(squares[4])
-        idx = coords_to_index(4, 4, n)
-        surround_mx_5 = SurroundingRectangle(distance_matrix[idx])
-
-        self.play(
-            ReplacementTransform(surround_sq_7, surround_sq_9),
-            ReplacementTransform(surround_sq_8, surround_sq_10),
-            ReplacementTransform(surround_mx_4, surround_mx_5),
-        )
         self.wait()
