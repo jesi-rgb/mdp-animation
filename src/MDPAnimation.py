@@ -10,9 +10,7 @@ np.fill_diagonal(D, 0)
 D = np.triu(D)
 
 TITLE = Text("Maximum Diversity Problem", font="SF Mono")
-MDP_FORMULA = (
-	Tex(r"MD(x) = \sum^{n-1}_{i=0} \sum^{n}_{j=i+1} D_{ij}x_ix_j")
-)
+MDP_FORMULA = Tex(r"MD(x) = \sum^{n-1}_{i=0} \sum^{n}_{j=i+1} D_{ij}x_ix_j")
 
 
 class MMatrix:
@@ -30,4 +28,7 @@ class MMatrix:
 
 class IntroButterflies(Scene):
     def construct(self):
-        
+        butterfly = (
+            SVGMobject("butterfly-top-view.svg").set_stroke(width=0.3).set_color(GREEN)
+        )
+        self.add(butterfly)

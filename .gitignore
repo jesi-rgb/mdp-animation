@@ -4,3 +4,4 @@ media/
 .ipynb_checkpoints 
 *.pyc
 __pycache__
+temp
