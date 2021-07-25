@@ -8,7 +8,7 @@ camera_qualities:
     frame_rate: 15
     resolution: 854x480
   medium:
-    frame_rate: 30
+    frame_rate: 60
     resolution: 1280x720
   ultra_high:
     frame_rate: 60
@@ -21,8 +21,8 @@ directories:
   temporary_storage: temp
   vector_images: vector
 style:
-  background_color: ''
-  font: Consolas
+  background_color: '#242424'
+  font: Avenir
 tex:
   executable: latex
   intermediate_filetype: dvi
