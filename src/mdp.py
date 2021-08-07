@@ -250,7 +250,7 @@ def genetic_algorithm(n, m, D, initial_population=100, k_top=15, m_factor=0.002,
 
     # Initialize population
     # For this, lets generate 1 possible solution and calculate permutations over it
-    current_generation = [create_random_solution(n, m) for i in range(initial_population)]
+    current_generation = [create_random_solution(n, m) for _ in range(initial_population)]
     diversity_arr = pool.map(partial_func, current_generation)
 
     # To keep track during the execution
