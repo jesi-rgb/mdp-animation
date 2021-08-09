@@ -4,7 +4,7 @@ import numpy as np
 from numpy.core.fromnumeric import sort
 from numpy.lib.stride_tricks import sliding_window_view
 
-np.random.seed(2)
+np.random.seed(1)
 
 
 # Distance Matrix
@@ -70,7 +70,7 @@ def shape_solution(M, m):
     return M
 
 
-def calculate_diversity(M, D):
+def calculate_diversity(M, D) -> np.int64:
     """
     This function calculates the diversity of a solution based on the
     definition for the Maximum Diversity Problem.
@@ -260,10 +260,10 @@ class SolutionSquare(VGroup):
 
 
 class Solution(VGroup):
-    def __init__(self, M):
+    def __init__(self, M: np.ndarray):
         self.squares = VGroup()
-        for i in range(len(M)):
-            self.squares.add(SolutionSquare(M[i]))
+
+        [self.squares.add(SolutionSquare(m)) for m in M]
 
         self.diversity = Text(
             str(calculate_diversity(M, D)), color=YELLOW, font="SF Mono"
@@ -291,8 +291,13 @@ class Generation(VGroup):
         else:
             return self.gen_dict[value]
 
-    def delete_solution(self, index):
-        pass
+    def delete_solutions(self, section):
+        sl = slice(section[0], section[1])
+        vg = VGroup(*[i[1] for i in self.gen_dict.items()][sl])
+        anim = FadeOut(vg)
+        # for i in range(section[0], section[1]):
+        #     del self.gen_dict[i]
+        return anim
 
     def process_slice(self, section, function):
         return ApplyFunction(
@@ -421,7 +426,7 @@ class GeneticAlgorithm(Scene):
     def construct(self):
 
         initial_population = 10
-        k_top = 7
+        k_top = 5
         m_factor = 0.002
         n_iterations = 500
         patience = 20
@@ -484,48 +489,49 @@ class GeneticAlgorithm(Scene):
 
             sorting_animation = []
             aux_sort_arr = diversity_arr.copy()
-            for i in range(len(aux_sort_arr)):
+            for s in range(len(aux_sort_arr)):
                 sorted_indices = np.argsort(aux_sort_arr)[::-1]
                 print(sorted_indices)
                 sorting_animation.append(
                     self.play(
                         Swap(
-                            current_generation_repr[i],
-                            current_generation_repr[sorted_indices[i]],
+                            current_generation_repr[s],
+                            current_generation_repr[sorted_indices[s]],
                         ),
-                        run_time=10 / (i + 3),
+                        run_time=10 / (s + 3),
                     )
                 )
-                current_generation_repr.swap_solutions(i, sorted_indices[i])
-                aux_sort_arr[i], aux_sort_arr[sorted_indices[i]] = (
-                    aux_sort_arr[sorted_indices[i]],
-                    aux_sort_arr[i],
+                current_generation_repr.swap_solutions(s, sorted_indices[s])
+                aux_sort_arr[s], aux_sort_arr[sorted_indices[s]] = (
+                    aux_sort_arr[sorted_indices[s]],
+                    aux_sort_arr[s],
                 )
                 print("Aux sort:", aux_sort_arr)
 
             # self.play(*sorting_animation, run_time=10)
 
-            self.wait(100)
-            self.play(FadeOut(current_generation_repr), FadeIn(sorted_gen_repr))
+            self.wait(3)
 
             # Select k_top best parents from this generation
             best_solutions = [s[0] for s in sorted_gen_div]
             survivals = best_solutions[:k_top]
 
-            survivals_repr = (
-                Generation(survivals).move_to(UP * 0.8 + LEFT * 4.3).scale(0.2)
-            ).next_to(sorted_gen_repr, ORIGIN, aligned_edge=UP)
-
-            self.wait(2)
-
             def fade_section(mobject):
                 return mobject.set_opacity(0.3)
 
             self.play(
-                survivals_repr.process_slice(
-                    slice(k_top + 1, len(survivals)), fade_section
+                current_generation_repr.process_slice(
+                    slice(k_top + 1, len(current_generation)), fade_section
                 )
             )
+
+            self.play(
+                current_generation_repr.delete_solutions(
+                    (k_top + 1, len(current_generation))
+                )
+            )
+
+            self.wait(2)
 
             print(
                 "> Best solution in gen {} had diversity {}\n".format(
@@ -551,7 +557,6 @@ class GeneticAlgorithm(Scene):
             aux_gen_repr = (
                 Generation(current_generation).move_to(UP * 0.8 + LEFT * 4.3).scale(0.2)
             )
-            self.play(ReplacementTransform(survivals_repr, aux_gen_repr))
 
             current_generation_repr = aux_gen_repr
 
