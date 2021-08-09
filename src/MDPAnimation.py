@@ -1,8 +1,10 @@
+from itertools import product
 from manimlib import *
 import numpy as np
+from numpy.core.fromnumeric import sort
 from numpy.lib.stride_tricks import sliding_window_view
 
-np.random.seed(1)
+np.random.seed(2)
 
 
 # Distance Matrix
@@ -297,6 +299,9 @@ class Generation(VGroup):
             function, VGroup(*[i[1] for i in self.gen_dict.items()][section])
         )
 
+    def swap_solutions(self, i1, i2):
+        self.gen_dict[i1], self.gen_dict[i2] = self.gen_dict[i2], self.gen_dict[i1]
+
 
 # Scenes
 class IntroButterflies(Scene):
@@ -449,12 +454,12 @@ class GeneticAlgorithm(Scene):
         patience_history = []
         best_solution_gen_history = []
 
-        gen_text = Text(f"Generation: ").move_to(UP * 3 + RIGHT * 3)
-        gen_counter = Integer(0, font="SF Mono", color=YELLOW).next_to(gen_text, RIGHT)
+        gen_text = Text("Generation: ").move_to(UP * 3 + RIGHT * 3)
+        gen_counter = Integer(0).next_to(gen_text, RIGHT).scale(0.5)
         gen_c_vg = VGroup(gen_text, gen_counter).scale(0.5)
 
-        best_text = Text(f"Best solution so far: ").next_to(gen_text, DOWN)
-        best_div = Integer(0, font="SF Mono", color=YELLOW).next_to(best_text, RIGHT)
+        best_text = Text("Best solution so far: ").next_to(gen_text, DOWN)
+        best_div = Integer(0).next_to(best_text, RIGHT).scale(0.5)
         best_vg = VGroup(best_text, best_div).scale(0.5)
 
         self.play(
@@ -473,10 +478,34 @@ class GeneticAlgorithm(Scene):
 
             sorted_gen_repr = (
                 Generation([s[0] for s in sorted_gen_div])
-                .move_to(UP * 0.8 + LEFT * 4.3)
+                .next_to(current_generation_repr, RIGHT, buff=-4)
                 .scale(0.2)
             )
 
+            sorting_animation = []
+            aux_sort_arr = diversity_arr.copy()
+            for i in range(len(aux_sort_arr)):
+                sorted_indices = np.argsort(aux_sort_arr)[::-1]
+                print(sorted_indices)
+                sorting_animation.append(
+                    self.play(
+                        Swap(
+                            current_generation_repr[i],
+                            current_generation_repr[sorted_indices[i]],
+                        ),
+                        run_time=10 / (i + 3),
+                    )
+                )
+                current_generation_repr.swap_solutions(i, sorted_indices[i])
+                aux_sort_arr[i], aux_sort_arr[sorted_indices[i]] = (
+                    aux_sort_arr[sorted_indices[i]],
+                    aux_sort_arr[i],
+                )
+                print("Aux sort:", aux_sort_arr)
+
+            # self.play(*sorting_animation, run_time=10)
+
+            self.wait(100)
             self.play(FadeOut(current_generation_repr), FadeIn(sorted_gen_repr))
 
             # Select k_top best parents from this generation
@@ -488,10 +517,6 @@ class GeneticAlgorithm(Scene):
             ).next_to(sorted_gen_repr, ORIGIN, aligned_edge=UP)
 
             self.wait(2)
-
-            # TODO: tratar de crear una nueva clase para las generaciones
-            # TODO mas especifico: turn the opacity of the dead solutions down
-            # before erasing them
 
             def fade_section(mobject):
                 return mobject.set_opacity(0.3)
@@ -524,10 +549,7 @@ class GeneticAlgorithm(Scene):
             ]
 
             aux_gen_repr = (
-                VGroup(*[Solution(s) for s in current_generation])
-                .arrange_in_grid(n_rows=len(current_generation))
-                .move_to(UP * 0.8 + LEFT * 4.3)
-                .scale(0.2)
+                Generation(current_generation).move_to(UP * 0.8 + LEFT * 4.3).scale(0.2)
             )
             self.play(ReplacementTransform(survivals_repr, aux_gen_repr))
 
@@ -552,8 +574,11 @@ class GeneticAlgorithm(Scene):
             print(
                 "> Best solution so far has diversity {}\n".format(last_best_solution)
             )
+
             self.play(
-                ChangeDecimalToValue(gen_counter, i, font="SF Mono", color=YELLOW),
+                ChangeDecimalToValue(
+                    gen_counter, i, kwargs={"font": "SF Mono", "color": YELLOW}
+                ),
                 ChangeDecimalToValue(best_div, last_best_solution),
             )
 
